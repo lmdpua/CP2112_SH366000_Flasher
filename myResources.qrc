@@ -1,0 +1,13 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file>icon.ico</file>
+        <file>openfile256.ico</file>
+        <file>save256.ico</file>
+        <file>datadownload.ico</file>
+        <file>dataupload.ico</file>
+        <file>faq.ico</file>
+        <file>setting.ico</file>
+        <file>info.ico</file>
+        <file>configure.ico</file>
+    </qresource>
+</RCC>
