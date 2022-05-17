@@ -26,7 +26,7 @@
     <item>
      <widget class="QLabel" name="label">
       <property name="text">
-       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;You can download the source code of the program at &lt;a href=&quot;https://github.com/lmdpua/CP2112_SH366000_Flasher.git&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;this&lt;/span&gt;&lt;/a&gt; address.&lt;/p&gt;&lt;p&gt;If you liked or helped this program, you can support the project with a small amount on my paypal &lt;a href=&quot;luckas@ua.fm&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;luckas@ua.fm&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;May-2022&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;You can use, modify and distribute this program for free. The source code is on github at &lt;a href=&quot;https://github.com/lmdpua/CP2112_SH366000_Flasher.git&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;this&lt;/span&gt;&lt;/a&gt; address.&lt;/p&gt;&lt;p&gt;If you liked or helped this program, you can support the project with a small amount on my paypal &lt;a href=&quot;luckas@ua.fm&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;luckas@ua.fm&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;May-2022&lt;/p&gt;&lt;p&gt;Слава Україні! Путін Хуйло!&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
       </property>
       <property name="wordWrap">
        <bool>true</bool>
