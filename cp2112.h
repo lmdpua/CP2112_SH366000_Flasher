@@ -5,6 +5,8 @@
 #include "Library\Windows\SLABCP2112.h"
 #include "qglobal.h"
 #include <QString>
+#include <QVariant>
+
 
 
 #define VID 0x10C4
@@ -29,9 +31,36 @@ enum CONDITION
     SPEED
 };
 
+//Объявим структуру для параметров
+struct config
+{
+    QVariant    defaultData;
+    QVariant    userData;
+};
+
+enum
+{
+    Bitrate,
+    ACK_Address,
+    Auto_Respond,
+    Write_Timeout,
+    Read_Timeout,
+    Transfer_Retries,
+    SCL_Low_Timeout,
+    Response_Timeout,
+    RX_TX_Leds_On,
+};
+
+//Сделаем видимым для остальных массив, который инициализирован в cp2112.cpp
+extern config cp2112config[];
+extern quint8 numcp2112config;
+
 STATUS CP2112_Init(HID_SMBUS_DEVICE *device, QString cond[]);
 quint8 CP2112_Close(HID_SMBUS_DEVICE device, QString *str);
 QString CP2112_Error_Handler (HID_SMBUS_STATUS status);
 void CP2112_Clear_Condition(QString cond[]);
+void readINI ();
+void writeINI ();
+QVariant getDataFromString (QString str, bool *ok);
 
 #endif // CP2112_H

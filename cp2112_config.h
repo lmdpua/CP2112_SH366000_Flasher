@@ -2,13 +2,13 @@
 #define CP2112_CONFIG_H
 
 // Режим работы шины SMBUS
-#define BITRATE_HZ                  100000
+#define BITRATE_HZ                  70000
 #define ACK_ADDRESS                 0x02
-#define AUTO_RESPOND                FALSE
+#define AUTO_RESPOND                false
 #define WRITE_TIMEOUT_MS            1000
 #define READ_TIMEOUT_MS             1000
 #define TRANSFER_RETRIES            0
-#define SCL_LOW_TIMEOUT             TRUE
+#define SCL_LOW_TIMEOUT             true
 #define RESPONSE_TIMEOUT_MS         1000
 
 //GPIO конфиг
@@ -30,8 +30,9 @@
 #define GPIO_6_MODE    HID_SMBUS_MODE_OPEN_DRAIN
 #define GPIO_7_MODE    HID_SMBUS_MODE_OPEN_DRAIN
 
-#define TX             TRUE
-#define RX             TRUE
+#define TX             true
+#define RX             true
+#define RX_TX_LEDS_ON  true
 
 //Конфиг батареи
 #define BATTERY_ADDRESS             0x0B

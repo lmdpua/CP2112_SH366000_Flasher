@@ -10,7 +10,6 @@
 #include <QFile>
 #include <QDir>
 #include <QTextStream>
-#include "readdialog.h"
 #include <QIODevice>
 #include <string.h> //Без этого не работает memcpy
 //#include <Qt>
@@ -18,12 +17,14 @@
 #include <QByteArray>
 #include <QLabel>
 #include <QProgressBar>
+#include <QCloseEvent>
 
 HID_SMBUS_DEVICE m_hidSmbus         = 0; //Адрес устройства CP2112 с точки зрения винды
 STATUS HIDstatus                    = STATUS_OK;
 Array flashDataArray                = EMPTY;
 QByteArray flashData                = {0};
 QString cp2112condition [7]={0};
+enum calibData {temperature, voltage, current};
 
 #define DATA_COLUMN 2
 
@@ -58,7 +59,9 @@ MainWindow::MainWindow(QWidget *parent)
     setSBSTable (ui->tableWidget_2);
 
     quint8 bitTableSize;
-    QVBoxLayout *lay = new QVBoxLayout(this);   //Создадим слой VBox
+//    QVBoxLayout *lay = new QVBoxLayout(this);   //Создадим слой VBox
+
+    QVBoxLayout *lay = ui->verticalLayout_2;
 
     tableBatteryMode    = new QTableWidget(this);
     tableBatteryStatus  = new QTableWidget(this);
@@ -79,11 +82,11 @@ MainWindow::MainWindow(QWidget *parent)
     lay->addWidget(labelBatteryMode);
     lay->addWidget(tableBatteryMode);
 
-    lay->addWidget(labelPackStatus);
+    lay->addWidget(labelBatteryStatus);
     lay->addWidget(tableBatteryStatus);
     lay->addWidget(labelNoteBatteryStatus);
 
-    lay->addWidget(labelBatteryStatus);
+    lay->addWidget(labelPackStatus);
     lay->addWidget(tablePackStatus);
 
     lay->addWidget(labelPackConfig);//Разместим таблицы на слое
@@ -95,8 +98,6 @@ MainWindow::MainWindow(QWidget *parent)
 
     lay->addWidget(labelSsafe);
     lay->addWidget(tableSsafe);
-
-    ui->scrollAreaWidgetContents_2->setLayout(lay); //Установим слой на область прокрутки
 
     bitTableSize = sizeof(BatteryMode)/sizeof(BatteryMode[0]);  //Определим количество строк
     setBinTable(tableBatteryMode, BatteryMode, bitTableSize);    //Настроим таблицы
@@ -116,14 +117,16 @@ MainWindow::MainWindow(QWidget *parent)
     bitTableSize = sizeof(Ssafe)/sizeof(Ssafe[0]);
     setBinTable(tableSsafe, Ssafe, bitTableSize);
 
-    ui->scrollAreaWidgetContents_2->setLayout(lay);
+    ui->scrollAreaWidgetContents_2->setLayout(lay); //Установим слой на область прокрутки
 
-    quint8 index = ui->tabWidget->indexOf(ui->tab_1);
-    ui->tabWidget->setCurrentIndex(index);
+    quint8 index = ui->tabWidget->indexOf(ui->tab_1); //Найдем индекс первой вкладки
+    ui->tabWidget->setCurrentIndex(index);  //Установим ее как текущую
+
 }
 
 MainWindow::~MainWindow()
 {
+//    configWindowUI.close();
     delete ui;
 }
 
@@ -285,6 +288,10 @@ void MainWindow::on_actionOpen_triggered()
     }
     else
     {
+        quint8   num    = sizeof(flash)/sizeof(flash[0]); //Вычисляем количество элементов в массиве с адресами
+        quint16  size   = flash[num-1].regAddr + flash[num-1].dataLen;  //Вычисляем максимальный размер массива для данных из флеш
+        //Это последний адрес+длинна слова
+        flashData.resize(size); //Изменяем размер массива для данных из флеш до нужного размера
         flashData.fill(0);  //Заполняем массив нулями
         flashDataArray  = EMPTY; //Ставим флаг, что массив теперь пустой
         if(readFromFile(&fileName, &flashData)==STATUS_OK)
@@ -511,15 +518,17 @@ void MainWindow::readDataFromArray(void)
         }
         case 0x10: //Если строка
         {
-            quint8 str_len      = flashData[flash[i].regAddr];  //Узнаем длину строки
+            qsizetype str_len      = flashData[flash[i].regAddr];  //Узнаем длину строки
             quint16 str_start    = flash[i].regAddr+1;           //Начало строки
-            QChar dataChar [str_len]; //Создаем массив QChar
+//            QChar dataChar [16]; //Создаем массив QChar
 
-            for (BYTE n=0; n<str_len; n++)
-            {
-                dataChar[n] = flashData[str_start+n]; //Копируем побайтно
-            }
-            QString str(dataChar, str_len); //Из массива символов создаем строку QString
+//            for (BYTE n=0; n<str_len; n++)
+//            {
+//                dataChar[n] = flashData[str_start+n]; //Копируем побайтно
+//            }
+//            QString str(dataChar, str_len);
+            //Из массива символов создаем строку QString
+            str = QString::fromLocal8Bit(&flashData[str_start], str_len);
             ui->tableWidget->item(i,DATA_COLUMN)->setText(str);
             break;
         }
@@ -1110,45 +1119,28 @@ void MainWindow::on_tabWidget_tabBarClicked(int index)
 
 void MainWindow::slotCalibTimerAlarm()
 {
-    if(!transferStart())
-    {
-        disconnect(calibTimer, SIGNAL(timeout()), this, SLOT(slotCalibTimerAlarm()));
-        return;
-    }
-
-    qint32 current=0;
-    ReadWord(m_hidSmbus, &current, 0x0a);
-    ui->lineMeasuredCurrent->setText(QString("%1").arg((qint16)current,1,10));
-    ui->lineMeasuredCurrent->setAlignment(Qt::AlignCenter);
-
-    transferStop();
-}
-
-void MainWindow::on_writeCurrent_clicked()
-{
     while(HIDstatus == TRANSFER_IN_PROGRESS){};
     HIDstatus       = TRANSFER_IN_PROGRESS; //Ставим флаг, что идет передача данных
 
     if (CP2112_Init(&m_hidSmbus, cp2112condition)!=STATUS_OK) //Конфигурируем CP2112
     {
-        HIDstatus = TRANSFER_COMPLETED; //Ставим флаг, что передача данных закончена
         return;
     }
 
-    QString str             =   ""; //Объявляем строку для приема текста
-    qint32 current          =   0;
-    bool ok                 =   0; //Флаг успешного преобразования из текста в число
-    str                     =   ui->lineActualCurrent->text();
-    current                 =   str.toInt(&ok, 10);
-    const quint8 dataLen    =   4;
-    quint8 data[dataLen]    =   {0};
+    qint32 tempK=0;
+    float tempC=0.0;
+    ReadWord(m_hidSmbus, &tempK, 0x08);
+    tempC = (float)tempK/10.0-273.1;
+    ui->lineMeasuredTemperature->setText(QString::number(tempC,1,1));
 
-    data[0] =   0xff;
-    data[1] =   0x05;
-    data[2] =   (BYTE)current & 0xff;
-    data[3] =   current >> 8;
+    qint32 voltage=0;
+    ReadWord(m_hidSmbus, &voltage, 0x09);
+    ui->lineMeasuredVoltage->setText(QString::number(voltage));
 
-    writeRequest(m_hidSmbus, data, dataLen);
+    qint32 current=0;
+    ReadWord(m_hidSmbus, &current, 0x0a);
+    ui->lineMeasuredCurrent->setText(QString("%1").arg((qint16)current,1,10));
+
     transferStop();
 }
 
@@ -1171,3 +1163,82 @@ void MainWindow::transferStop()
     HidSmbus_Close(m_hidSmbus);
     HIDstatus = TRANSFER_COMPLETED;
 }
+
+void MainWindow::on_writeTemperature_clicked()
+{
+    writeCalibData(temperature, 0x06, ui->lineActualTemperature);
+}
+
+void MainWindow::on_writeVoltage_clicked()
+{
+    writeCalibData(voltage, 0x04, ui->lineActualVoltage);
+}
+
+void MainWindow::on_writeCurrent_clicked()
+{
+    writeCalibData(current, 0x05, ui->lineActualCurrent);
+}
+
+void MainWindow::writeCalibData(quint8 dataType, quint8 addr, QLineEdit *lineEdit)
+{
+    while(HIDstatus == TRANSFER_IN_PROGRESS){};
+    HIDstatus       = TRANSFER_IN_PROGRESS; //Ставим флаг, что идет передача данных
+
+    if (CP2112_Init(&m_hidSmbus, cp2112condition)!=STATUS_OK) //Конфигурируем CP2112
+    {
+        HIDstatus = TRANSFER_COMPLETED; //Ставим флаг, что передача данных закончена
+        return;
+    }
+
+    QString str             =   ""; //Объявляем строку для приема текста
+    qint32 data             =   0;
+    bool ok                 =   0; //Флаг успешного преобразования из текста в число
+    str                     =   lineEdit->text();
+
+    if(dataType==temperature)
+    {
+        float temp = str.toFloat(&ok);
+        temp = (temp + 273.1)*10.0;
+        data = temp;
+    }
+    else
+    {
+        data = str.toInt(&ok, 10);
+    }
+
+    if(data>0xffff || !ok)
+    {
+        QMessageBox::critical(this,"Error","The entered number is not valid");
+        HIDstatus = TRANSFER_COMPLETED; //Ставим флаг, что передача данных закончена
+        return;
+    }
+
+    const quint8 buffLen    =   4;
+    quint8 buff[buffLen]    =   {0};
+
+    buff[0] =   0xff;
+    buff[1] =   addr;
+    buff[2] =   (BYTE)data & 0xff;
+    buff[3] =   data >> 8;
+
+    writeRequest(m_hidSmbus, buff, buffLen);
+    transferStop();
+}
+
+void MainWindow::on_actionSettings_triggered()
+{
+    configWindowUI.show();
+}
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+        event->accept();
+        configWindowUI.close();
+        aboutUI.close();
+}
+
+void MainWindow::on_actionInfo_triggered()
+{
+    aboutUI.show();
+}
+

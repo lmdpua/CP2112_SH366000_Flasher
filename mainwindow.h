@@ -6,15 +6,8 @@
 #include "cp2112.h"
 #include <QTimer>
 #include <QTime>
-
-//enum Status
-//{
-//    STATUS_FAIL,
-//    STATUS_OK,
-//    DEVICE_READY,
-//    TRANSFER_IN_PROGRESS,
-//    TRANSFER_COMPLETED
-//};
+#include <configwindow.h>
+#include <about.h>
 
 enum Array
 {
@@ -46,7 +39,6 @@ public:
     void setTable (QTableWidget *table);
     void setStatusbarTable(QTableWidget *table);
     void fillStatusbarTable(QTableWidget *table, QString cond[]);
-//    bool CP2112_Init(HID_SMBUS_DEVICE &device);
     bool readBatteryFlash(HID_SMBUS_DEVICE &device, QByteArray &flashData);
     bool saveToFile(QString *pathToFile, QByteArray *dataToSave);
     bool readFromFile(QString *pathToFile, QByteArray *dataFromFile);
@@ -57,6 +49,7 @@ public:
     void fillBinTable(QTableWidget *table, const struct bin_data *data, quint8 size);
     bool transferStart();
     void transferStop();
+    void writeCalibData(quint8 dataType, quint8 addr, QLineEdit *lineEdit);
 
 private slots:
     void slotTimerAlarm();
@@ -95,8 +88,20 @@ private slots:
 
     void on_writeCurrent_clicked();
 
+    void on_writeTemperature_clicked();
+
+    void on_writeVoltage_clicked();
+
+    void on_actionSettings_triggered();
+
+    void closeEvent(QCloseEvent *event);
+
+    void on_actionInfo_triggered();
+
 private:
     Ui::MainWindow *ui;
+    ConfigWindow configWindowUI;
+    About aboutUI;
     QTimer *timer;
     QTimer *calibTimer;
     QTableWidget *tableBatteryMode;

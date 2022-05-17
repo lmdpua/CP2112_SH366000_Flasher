@@ -10,26 +10,28 @@ CONFIG += c++11
 
 SOURCES += \
     BatteryCommands.cpp \
+    about.cpp \
+    configwindow.cpp \
     cp2112.cpp \
     main.cpp \
-    mainwindow.cpp \
-    readdialog.cpp
+    mainwindow.cpp
 
 HEADERS += \
     BatteryCommands.h \
-    GPIO_Config.h \
     Library/Windows/SLABCP2112.h \
     SMBusConfig.h \
+    about.h \
+    configwindow.h \
     cp2112.h \
     cp2112_config.h \
     mainwindow.h \
-    readdialog.h \
     sh366000_addresses.h \
     types.h
 
 FORMS += \
-    mainwindow.ui \
-    readdialog.ui
+    about.ui \
+    configwindow.ui \
+    mainwindow.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -39,7 +41,8 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 DISTFILES += \
     Library/Windows/x64/SLABHIDDevice.dll \
     Library/Windows/x64/SLABHIDtoSMBus.dll \
-    Library/Windows/x64/SLABHIDtoSMBus.lib
+    Library/Windows/x64/SLABHIDtoSMBus.lib \
+    config.ini
 
 win32: LIBS += -L$$PWD/Library/Windows/x64/ -lSLABHIDtoSMBus
 
@@ -47,7 +50,6 @@ INCLUDEPATH += $$PWD/Library/Windows
 DEPENDPATH += $$PWD/Library/Windows
 
 RESOURCES += \
-    myResources.qrc \
     myResources.qrc
 
 RC_ICONS = icon.ico
