@@ -10,3 +10,5 @@ I tried to make the functionality completely similar to the original Chinese pro
 Instead, you can use a much cheaper ср2112 chip board.
 
 ![cp2112_01-500x500](https://user-images.githubusercontent.com/17345244/170692264-9a1413ae-54dd-4608-8a50-75551e309b45.jpg)
+
+To do this, I had to buy a Chinese programmer and study its operation using a logic analyzer
